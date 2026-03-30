@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0e17;--surface:#1a1830;--card:#22203a;--border:#2e2c4e;
+  --purple:#a78bfa;--pink:#f472b6;--teal:#34d399;--amber:#fbbf24;--red:#f87171;
+  --text:#e2e0f5;--muted:#8b88b0;--font:'Nunito',sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LAYOUT */
+.page{display:flex;gap:16px;padding:16px;max-width:1000px;margin:0 auto;align-items:flex-start}
+
+/* SIDEBAR */
+.sidebar{width:230px;flex-shrink:0;position:sticky;top:16px}
+.sidebar-title{font-size:14px;font-weight:900;color:var(--purple);margin-bottom:10px}
+.subject-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden}
+.subject-header{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer;user-select:none;transition:background .15s}
+.subject-header:hover{background:var(--card)}
+.subject-name{font-size:13px;font-weight:800}
+.subject-arrow{font-size:10px;color:var(--muted)}
+.subject-body{padding:0 10px 10px;display:none;flex-direction:column;gap:6px}
+.subject-body.open{display:flex}
+.tip-item{background:var(--card);border-radius:8px;padding:7px 9px;font-size:12px;line-height:1.4;display:flex;gap:6px;align-items:flex-start}
+.tip-item span{flex:1;color:var(--text)}
+.tip-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;flex-shrink:0;padding:0;line-height:1;margin-top:1px}
+.tip-del:hover{color:var(--red)}
+.tip-add-row{display:flex;gap:5px;margin-top:2px}
+.tip-input{flex:1;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--font)}
+.tip-input:focus{outline:none;border-color:var(--purple)}
+.tip-add-btn{padding:6px 10px;background:var(--purple);border:none;border-radius:8px;color:white;font-size:14px;font-weight:800;cursor:pointer}
+.no-tips{font-size:12px;color:var(--muted);text-align:center;padding:6px 0}
+
+/* MAIN APP */
+.app{flex:1;min-width:0}
+.header{text-align:center;margin-bottom:14px}
+.logo{font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--purple),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* TOP PANEL */
+.top-panel{background:var(--surface);border-radius:16px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--border)}
+.top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.stars-label-row{display:flex;align-items:center;gap:8px}
+.panel-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.star-btn-inline{padding:3px 9px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);transition:transform .15s}
+.star-btn-inline:active{transform:scale(.93)}
+.star-add-inline{background:linear-gradient(135deg,var(--amber),#f59e0b);color:white}
+.star-remove-inline{background:var(--card);border:1px solid var(--border);color:var(--muted)}
+.coins-pill{display:flex;align-items:center;gap:5px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.5);border-radius:20px;padding:5px 12px;font-size:15px;font-weight:900;color:var(--amber);cursor:pointer;transition:background .2s;user-select:none}
+.coins-pill:hover{background:rgba(251,191,36,.2)}
+.edit-hint{font-size:10px;color:rgba(251,191,36,.5);font-weight:700}
+.stars-slots{display:flex;gap:6px}
+.star-slot{font-size:30px;line-height:1;user-select:none}
+.star-slot.filled{filter:drop-shadow(0 0 7px #fbbf24)}
+.star-slot.empty{opacity:.15;filter:grayscale(1)}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px;width:100%;max-width:320px;text-align:center;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:900;margin-bottom:4px}
+.modal-desc{font-size:12px;color:var(--muted);margin-bottom:14px}
+.modal-current{font-size:40px;font-weight:900;color:var(--amber);margin-bottom:14px;line-height:1}
+.quick-btns{display:flex;gap:7px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.qbtn{padding:7px 13px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);transition:border-color .15s}
+.qbtn:hover{border-color:var(--amber);color:var(--amber)}
+.modal-sep{font-size:11px;color:var(--muted);margin-bottom:10px}
+.modal-input-row{display:flex;gap:8px;margin-bottom:10px}
+.modal-input{flex:1;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;font-family:var(--font);text-align:center}
+.modal-input:focus{outline:none;border-color:var(--amber)}
+.modal-apply{width:100%;padding:10px;border:none;border-radius:12px;color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:var(--font);margin-bottom:6px}
+.btn-add-coins{background:linear-gradient(135deg,var(--teal),#10b981)}
+.btn-remove-coins{background:linear-gradient(135deg,var(--red),#ef4444)}
+.modal-close-btn{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:var(--font);margin-top:2px}
+
+/* REWARD EDITOR MODAL */
+.reward-editor-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;text-align:left;max-height:320px;overflow-y:auto}
+.re-item{background:var(--card);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px}
+.re-icon{font-size:20px;flex-shrink:0}
+.re-info{flex:1;min-width:0}
+.re-name{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.re-meta{font-size:11px;color:var(--muted);display:flex;gap:6px;align-items:center;margin-top:2px;flex-wrap:wrap}
+.re-monthly-badge{background:rgba(167,139,250,.2);color:var(--purple);border-radius:6px;padding:1px 6px;font-size:10px;font-weight:800}
+.re-edit-btn{padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);flex-shrink:0}
+.re-edit-btn:hover{border-color:var(--purple);color:var(--purple)}
+.re-del-btn{padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;flex-shrink:0}
+.re-del-btn:hover{border-color:var(--red);color:var(--red)}
+.re-add-form{background:var(--card);border-radius:10px;padding:12px;text-align:left;border:1px solid var(--border)}
+.re-add-form label{font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:4px;margin-top:8px}
+.re-add-form label:first-child{margin-top:0}
+.re-field{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:var(--font)}
+.re-field:focus{outline:none;border-color:var(--purple)}
+.re-checkbox-row{display:flex;align-items:center;gap:8px;margin-top:10px;margin-bottom:2px}
+.re-checkbox-row input{width:16px;height:16px;accent-color:var(--purple);cursor:pointer}
+.re-checkbox-row label{font-size:12px;font-weight:700;color:var(--text);cursor:pointer}
+.re-save-btn{width:100%;padding:9px;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;border-radius:10px;color:white;font-size:13px;font-weight:900;cursor:pointer;font-family:var(--font);margin-top:10px}
+
+/* TABS */
+.tabs{display:flex;gap:5px;margin-bottom:12px;background:var(--surface);padding:4px;border-radius:14px;border:1px solid var(--border)}
+.tab{flex:1;padding:8px 4px;border:none;border-radius:10px;background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s}
+.tab.active{background:var(--card);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.section{display:none}
+.section.active{display:block}
+
+/* TIMER */
+.timer-card{background:var(--surface);border-radius:20px;padding:22px;border:1px solid var(--border);text-align:center;margin-bottom:12px}
+.timer-modes{display:flex;gap:6px;justify-content:center;margin-bottom:18px;flex-wrap:wrap}
+.tmode{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s}
+.tmode.active{background:var(--purple);border-color:var(--purple);color:white}
+.tmode.rest{color:var(--teal)}
+.tmode.active.rest{background:var(--teal);border-color:var(--teal);color:white}
+.timer-display{position:relative;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px}
+.timer-svg{transform:rotate(-90deg)}
+.timer-track{fill:none;stroke:#2e2c4e;stroke-width:8}
+.timer-prog{fill:none;stroke:url(#tgrad);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .5s linear}
+.timer-num{position:absolute;font-size:40px;font-weight:900;letter-spacing:-2px}
+.timer-label{font-size:12px;color:var(--muted);margin-top:-8px;margin-bottom:14px}
+.timer-btns{display:flex;gap:10px;justify-content:center}
+.btn-primary{padding:11px 24px;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;border-radius:13px;color:white;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);transition:transform .15s}
+.btn-primary:active{transform:scale(.96)}
+.btn-sec{padding:11px 17px;background:var(--card);border:1px solid var(--border);border-radius:13px;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.sessions-row{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--border)}
+.dot.done{background:var(--teal)}
+
+/* TASKS */
+.task-input-wrap{display:flex;gap:8px;margin-bottom:11px}
+.task-input{flex:1;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:13px;color:var(--text);font-size:14px;font-family:var(--font)}
+.task-input:focus{outline:none;border-color:var(--purple)}
+.add-btn{padding:11px 15px;background:var(--purple);border:none;border-radius:13px;color:white;font-size:20px;cursor:pointer;font-weight:700}
+.task-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px}
+.task-list{display:flex;flex-direction:column;gap:7px}
+.task-item{background:var(--surface);border-radius:13px;padding:11px 12px;border:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.task-item.done{opacity:.6}
+.task-check{width:22px;height:22px;border-radius:8px;border:2px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.task-check.checked{background:var(--teal);border-color:var(--teal)}
+.task-text{flex:1;font-size:13px;font-weight:600}
+.task-item.done .task-text{text-decoration:line-through;color:var(--muted)}
+.task-coins{font-size:11px;color:var(--amber);font-weight:800;background:rgba(251,191,36,.1);padding:2px 7px;border-radius:10px;white-space:nowrap}
+.task-reset{color:var(--muted);background:transparent;border:none;cursor:pointer;font-size:13px;padding:2px}
+.task-reset:hover{color:var(--amber)}
+.task-del{color:var(--muted);background:transparent;border:none;cursor:pointer;font-size:14px;padding:2px}
+.task-drag{color:var(--muted);background:transparent;border:none;cursor:grab;font-size:16px;padding:2px 4px;flex-shrink:0;touch-action:none}
+.task-drag:active{cursor:grabbing}
+.task-item.dragging{opacity:.4;border:1px dashed var(--purple)}
+.task-item.drag-over{border-color:var(--purple);background:rgba(167,139,250,.08)}
+.priority-sel{display:flex;gap:6px;margin-bottom:11px}
+.prio{padding:5px 10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.prio.active.low{background:rgba(52,211,153,.15);border-color:var(--teal);color:var(--teal)}
+.prio.active.med{background:rgba(251,191,36,.15);border-color:var(--amber);color:var(--amber)}
+.prio.active.high{background:rgba(248,113,113,.15);border-color:var(--red);color:var(--red)}
+.empty-tasks{text-align:center;padding:28px;color:var(--muted);font-size:14px}
+
+/* REWARDS */
+.rewards-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;gap:8px;flex-wrap:wrap}
+.rewards-title{font-size:14px;font-weight:900}
+.rewards-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.reward-card{background:var(--surface);border-radius:14px;padding:13px;border:1px solid var(--border);text-align:center}
+.reward-card.unlocked{border-color:var(--teal)}
+.reward-card.locked{opacity:.6}
+.reward-icon{font-size:28px;margin-bottom:5px;display:block}
+.reward-name{font-size:12px;font-weight:800;margin-bottom:3px}
+.reward-cost{font-size:11px;color:var(--amber);font-weight:700;margin-bottom:3px}
+.reward-monthly{font-size:10px;color:var(--purple);font-weight:800;background:rgba(167,139,250,.15);border-radius:6px;padding:1px 6px;display:inline-block;margin-bottom:3px}
+.unlock-btn{width:100%;padding:6px;background:linear-gradient(135deg,var(--amber),#f59e0b);border:none;border-radius:9px;color:white;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:4px}
+.unlock-btn:disabled{background:var(--card);color:var(--muted);cursor:not-allowed}
+.toolbar-btn{padding:5px 11px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);white-space:nowrap}
+.toolbar-btn:hover{border-color:var(--purple);color:var(--purple)}
+
+/* BREATH */
+.breath-card{background:var(--surface);border-radius:20px;padding:22px;border:1px solid var(--border);text-align:center}
+.breath-circle{width:130px;height:130px;border-radius:50%;background:rgba(167,139,250,.1);border:3px solid var(--purple);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:transform 1s ease,background 1s ease;font-size:15px;font-weight:800;color:var(--purple)}
+.breath-phase{font-size:19px;font-weight:900;margin-bottom:5px}
+.breath-sub{font-size:12px;color:var(--muted);margin-bottom:18px}
+.breath-btn{padding:11px 30px;background:rgba(167,139,250,.15);border:1px solid var(--purple);border-radius:13px;color:var(--purple);font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font)}
+
+/* TOAST */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#22203a;border:1px solid var(--purple);border-radius:14px;padding:10px 20px;font-size:14px;font-weight:700;color:var(--text);z-index:999;animation:toastIn .3s ease;display:none;white-space:nowrap}
+@keyframes toastIn{from{opacity:0;top:0}to{opacity:1;top:20px}}
+@keyframes fall{to{transform:translateY(100vh) rotate(360deg);opacity:0}}
+
+@media(max-width:700px){
+  .page{flex-direction:column}
+  .sidebar{width:100%;position:static}
+}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- COIN MODAL -->
+<div class="modal-overlay" id="coinModal">
+  <div class="modal">
+    <h3>🪙 Editar monedas</h3>
+    <div class="modal-desc">Toca rápido o escribe una cantidad</div>
+    <div class="modal-current" id="modalCoinCount">0</div>
+    <div class="quick-btns">
+      <button class="qbtn" onclick="quickCoin(-10)">−10</button>
+      <button class="qbtn" onclick="quickCoin(-5)">−5</button>
+      <button class="qbtn" onclick="quickCoin(-1)">−1</button>
+      <button class="qbtn" onclick="quickCoin(+1)">+1</button>
+      <button class="qbtn" onclick="quickCoin(+5)">+5</button>
+      <button class="qbtn" onclick="quickCoin(+10)">+10</button>
+    </div>
+    <div class="modal-sep">— o escribe una cantidad —</div>
+    <div class="modal-input-row">
+      <input class="modal-input" id="coinInput" type="number" placeholder="Ej: 25" min="0">
+    </div>
+    <button class="modal-apply btn-add-coins" onclick="applyCoinModal(1)">➕ Añadir</button>
+    <button class="modal-apply btn-remove-coins" onclick="applyCoinModal(-1)">➖ Quitar</button>
+    <br><button class="modal-close-btn" onclick="closeCoinModal()">Cerrar</button>
+  </div>
+</div>
+
+<!-- REWARD EDITOR MODAL -->
+<div class="modal-overlay" id="rewardEditorModal">
+  <div class="modal" style="max-width:360px">
+    <h3 style="margin-bottom:12px">✏️ Editar Premios</h3>
+    <div class="reward-editor-list" id="rewardEditorList"></div>
+    <div style="font-size:12px;font-weight:900;color:var(--purple);margin-bottom:8px;text-align:left" id="reFormTitle">➕ Añadir premio</div>
+    <div class="re-add-form" id="reForm">
+      <input type="hidden" id="reEditId">
+      <label>Emoji / Icono</label>
+      <input class="re-field" id="reIcon" placeholder="🎁" maxlength="4">
+      <label>Nombre</label>
+      <input class="re-field" id="reName" placeholder="Nombre del premio">
+      <label>Coste (monedas)</label>
+      <input class="re-field" id="reCost" type="number" placeholder="50" min="1">
+      <label>Veces al mes (0 = sin límite) 🗓️</label>
+      <input class="re-field" id="reMonthly" type="number" placeholder="0" min="0" value="0">
+      <button class="re-save-btn" onclick="saveRewardForm()">💾 Guardar premio</button>
+    </div>
+    <br><button class="modal-close-btn" onclick="closeRewardEditor()">Cerrar</button>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-title">📚 Tips de estudio</div>
+    <div class="subject-block">
+      <div class="subject-header" onclick="toggleSubject('mates')">
+        <div class="subject-name">🔢 Matemáticas</div>
+        <div class="subject-arrow" id="arr-mates">▼</div>
+      </div>
+      <div class="subject-body" id="body-mates">
+        <div id="tips-mates"></div>
+        <div class="tip-add-row">
+          <input class="tip-input" id="inp-mates" placeholder="Nuevo tip..." onkeydown="if(event.key==='Enter')addTip('mates')">
+          <button class="tip-add-btn" onclick="addTip('mates')">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="subject-block">
+      <div class="subject-header" onclick="toggleSubject('orto')">
+        <div class="subject-name">✏️ Ortografía</div>
+        <div class="subject-arrow" id="arr-orto">▼</div>
+      </div>
+      <div class="subject-body" id="body-orto">
+        <div id="tips-orto"></div>
+        <div class="tip-add-row">
+          <input class="tip-input" id="inp-orto" placeholder="Nuevo tip..." onkeydown="if(event.key==='Enter')addTip('orto')">
+          <button class="tip-add-btn" onclick="addTip('orto')">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="subject-block">
+      <div class="subject-header" onclick="toggleSubject('lectura')">
+        <div class="subject-name">📖 Lectura</div>
+        <div class="subject-arrow" id="arr-lectura">▼</div>
+      </div>
+      <div class="subject-body" id="body-lectura">
+        <div id="tips-lectura"></div>
+        <div class="tip-add-row">
+          <input class="tip-input" id="inp-lectura" placeholder="Nuevo tip..." onkeydown="if(event.key==='Enter')addTip('lectura')">
+          <button class="tip-add-btn" onclick="addTip('lectura')">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div class="app">
+    <div class="header">
+      <div class="logo">🧠 Focus Mauri</div>
+    </div>
+
+    <!-- EXPORT / IMPORT -->
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button onclick="exportData()" style="flex:1;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--teal);font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font)">⬇️ Exportar datos</button>
+      <button onclick="document.getElementById('importFile').click()" style="flex:1;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--purple);font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font)">⬆️ Importar datos</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+
+    <!-- TOP PANEL -->
+    <div class="top-panel">
+      <div class="top-row">
+        <div class="stars-label-row">
+          <div class="panel-label">⭐ Estrellas Semanales</div>
+          <button class="star-btn-inline star-remove-inline" onclick="removeStar()">−</button>
+          <button class="star-btn-inline star-add-inline" onclick="addStar()">+</button>
+        </div>
+        <div class="coins-pill" onclick="openCoinModal()" title="Pulsa para editar monedas">
+          🪙 <span id="coinCount">0</span> <span class="edit-hint">✏️</span>
+        </div>
+      </div>
+      <div class="stars-slots" id="starDisplay"></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('timer',this)">⏱ Foco</button>
+      <button class="tab" onclick="showTab('tasks',this)">✅ Tareas</button>
+      <button class="tab" onclick="showTab('rewards',this)">🏆 Premios</button>
+      <button class="tab" onclick="showTab('breath',this)">💨 Calma</button>
+    </div>
+
+    <!-- TIMER -->
+    <div class="section active" id="sec-timer">
+      <div class="timer-card">
+        <div class="timer-modes">
+          <button class="tmode active" onclick="setMode('mini',10,this)">Mini 10'</button>
+          <button class="tmode" onclick="setMode('focus',25,this)">Foco 25'</button>
+          <button class="tmode" onclick="setMode('deep',45,this)">Deep 45'</button>
+          <button class="tmode rest" onclick="setMode('rest',5,this)">☕ Descanso 5'</button>
+        </div>
+        <div class="timer-display">
+          <svg class="timer-svg" width="160" height="160" viewBox="0 0 160 160">
+            <defs>
+              <linearGradient id="tgrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#f472b6"/>
+              </linearGradient>
+            </defs>
+            <circle class="timer-track" cx="80" cy="80" r="68"/>
+            <circle class="timer-prog" cx="80" cy="80" r="68" id="timerCircle" stroke-dasharray="427.3" stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-num" id="timerNum">10:00</div>
+        </div>
+        <div class="timer-label" id="timerLabel">Listo para empezar</div>
+        <div class="timer-btns">
+          <button class="btn-primary" id="timerBtn" onclick="toggleTimer()">▶ Iniciar</button>
+          <button class="btn-sec" onclick="resetTimer()">↺</button>
+        </div>
+        <div class="sessions-row">
+          <div class="dot" id="d1"></div><div class="dot" id="d2"></div>
+          <div class="dot" id="d3"></div><div class="dot" id="d4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="section" id="sec-tasks">
+      <div class="task-input-wrap">
+        <input class="task-input" id="taskInput" placeholder="¿Qué toca hacer?" onkeydown="if(event.key==='Enter')addTask()">
+        <button class="add-btn" onclick="addTask()">+</button>
+      </div>
+      <div class="task-header-row">
+        <div class="priority-sel" style="margin-bottom:0">
+          <button class="prio low active" onclick="setPrio('low',this)">🟢 Fácil</button>
+          <button class="prio med" onclick="setPrio('med',this)">🟡 Normal</button>
+          <button class="prio high" onclick="setPrio('high',this)">🔴 Difícil</button>
+        </div>
+        <button onclick="resetAllTasks()" style="padding:5px 11px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font)" title="Resetear todas las tareas">↺ Resetear</button>
+      </div>
+      <div style="height:11px"></div>
+      <div class="task-list" id="taskList">
+        <div class="empty-tasks">¡Sin tareas! Añade algo 🎯</div>
+      </div>
+    </div>
+
+    <!-- REWARDS -->
+    <div class="section" id="sec-rewards">
+      <div class="rewards-toolbar">
+        <div class="rewards-title">🏆 Tienda de Premios</div>
+        <div style="display:flex;gap:6px">
+          <button class="toolbar-btn" onclick="openRewardEditor()">✏️ Editar</button>
+          <button class="toolbar-btn" onclick="resetRewards()" style="color:var(--muted)">↺ Resetear</button>
+        </div>
+      </div>
+      <div class="rewards-grid" id="rewardsGrid"></div>
+    </div>
+
+    <!-- BREATH -->
+    <div class="section" id="sec-breath">
+      <div class="breath-card">
+        <div class="breath-circle" id="breathCircle">Listo</div>
+        <div class="breath-phase" id="breathPhase">Respiración 4-7-8</div>
+        <div class="breath-sub" id="breathSub">Técnica para calmar el sistema nervioso</div>
+        <button class="breath-btn" id="breathBtn" onclick="toggleBreath()">Empezar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ── FIREBASE SETUP ──────────────────────────────────────────────────────────
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDZ1OCA2O_o98aBnAZnDCZlAtnTj_I0Exg",
+  authDomain: "mauri-app.firebaseapp.com",
+  projectId: "mauri-app",
+  storageBucket: "mauri-app.firebasestorage.app",
+  messagingSenderId: "436575939672",
+  appId: "1:436575939672:web:0580a9aaa2247d14716e2d"
+};
+const _firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(_firebaseApp);
+const DOC_STATE   = doc(db,'focusmauri','state');
+const DOC_REWARDS = doc(db,'focusmauri','rewards');
+const DOC_TIPS    = doc(db,'focusmauri','tips');
+
+let _saveStateTimer=null, _saveRewardsTimer=null, _saveTipsTimer=null;
+
+// ── Default rewards — these are the factory defaults only used on first load
+const DEFAULT_REWARDS=[
+  {id:'r1',icon:'🎡',name:'Salida divertida',cost:30,monthly:0},
+  {id:'r2',icon:'🎮',name:'Robux',cost:200,monthly:1},
+  {id:'r3',icon:'🍬',name:'Dulces',cost:20,monthly:0},
+  {id:'r4',icon:'🍰',name:'Tarta Queso Tio Japo',cost:200,monthly:1},
+  {id:'r5',icon:'☀️',name:'Domingo libre',cost:150,monthly:1},
+  {id:'r6',icon:'🕹️',name:'Jugar 2h a un juego',cost:50,monthly:0},
+  {id:'r7',icon:'🛌',name:'Pijamada',cost:40,monthly:0},
+  {id:'r8',icon:'🌙',name:'Dormir con Mamá',cost:100,monthly:0},
+  {id:'r9',icon:'🧸',name:'Juguete hasta 20€',cost:600,monthly:1},
+  {id:'r10',icon:'🎬',name:'Cine',cost:800,monthly:1},
+  {id:'r11',icon:'🎯',name:'Juego',cost:900,monthly:1},
+];
+const SUBJECTS=['mates','orto','lectura'];
+
+let state={stars:0,coins:0,tasks:[],completedTasks:0,sessions:0,rewardsOwned:{},currentPrio:'low'};
+// rewardsOwned is now {id: 'YYYY-MM' | true} — 'YYYY-MM' for monthly, true for permanent
+let rewards=[...DEFAULT_REWARDS]; // editable list
+let tips={mates:[],orto:[],lectura:[]};
+
+let timerInterval=null,timerRunning=false,timerSeconds=600,timerTotal=600,timerMode='mini',sessionCount=0;
+let breathInterval=null,breathRunning=false,breathStep=0,breathCount=0;
+const breathSteps=[
+  {text:'Inhala...',sub:'Respira profundo por la nariz',dur:4000,scale:1.4,bg:'rgba(167,139,250,.25)'},
+  {text:'Aguanta',sub:'Retén el aire con calma',dur:7000,scale:1.4,bg:'rgba(167,139,250,.15)'},
+  {text:'Exhala...',sub:'Suelta el aire por la boca',dur:8000,scale:1.0,bg:'rgba(167,139,250,.05)'},
+];
+
+function curMonth(){let d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1);}
+function isOwned(r){
+  let v=state.rewardsOwned[r.id];
+  if(!v)return false;
+  if(r.monthly){
+    // v is {month:'YYYY-MM', count:N} or legacy true/'YYYY-MM'
+    if(typeof v==='object'&&v.month){
+      return v.month===curMonth()&&v.count>=r.monthly;
+    }
+    // legacy: true or 'YYYY-MM'
+    if(v===true)return true;
+    return v===curMonth();
+  }
+  return v===true;
+}
+function getMonthlyCount(r){
+  let v=state.rewardsOwned[r.id];
+  if(!v||!r.monthly)return 0;
+  if(typeof v==='object'&&v.month&&v.month===curMonth())return v.count||0;
+  if(typeof v==='string'&&v===curMonth())return 1; // legacy
+  return 0;
+}
+
+// ── FIREBASE SAVE / LOAD ────────────────────────────────────────────────────
+function save(){
+  // local backup
+  try{localStorage.setItem('fb_v4',JSON.stringify(state))}catch(e){}
+  // cloud — debounced
+  clearTimeout(_saveStateTimer);
+  _saveStateTimer=setTimeout(async()=>{
+    try{await setDoc(DOC_STATE,{data:JSON.stringify(state)});}catch(e){console.warn('save state:',e);}
+  },800);
+}
+function saveRewards(){
+  try{localStorage.setItem('fb_rewards_v4',JSON.stringify(rewards))}catch(e){}
+  clearTimeout(_saveRewardsTimer);
+  _saveRewardsTimer=setTimeout(async()=>{
+    try{await setDoc(DOC_REWARDS,{data:JSON.stringify(rewards)});}catch(e){console.warn('save rewards:',e);}
+  },800);
+}
+function saveTips(){
+  try{localStorage.setItem('fb_tips_v3',JSON.stringify(tips))}catch(e){}
+  clearTimeout(_saveTipsTimer);
+  _saveTipsTimer=setTimeout(async()=>{
+    try{await setDoc(DOC_TIPS,{data:JSON.stringify(tips)});}catch(e){console.warn('save tips:',e);}
+  },800);
+}
+async function load(){
+  // Try Firebase first, fallback to localStorage
+  try{
+    const [sSnap,rSnap,tSnap]=await Promise.all([getDoc(DOC_STATE),getDoc(DOC_REWARDS),getDoc(DOC_TIPS)]);
+    if(sSnap.exists()){let p=JSON.parse(sSnap.data().data);state={...state,...p};if(Array.isArray(state.rewardsOwned)){let o={};state.rewardsOwned.forEach(id=>o[id]=true);state.rewardsOwned=o;}}
+    else{let s=localStorage.getItem('fb_v4');if(s){let p=JSON.parse(s);state={...state,...p};if(Array.isArray(state.rewardsOwned)){let o={};state.rewardsOwned.forEach(id=>o[id]=true);state.rewardsOwned=o;}}}
+    if(rSnap.exists())rewards=JSON.parse(rSnap.data().data);
+    else{let r=localStorage.getItem('fb_rewards_v4');if(r)rewards=JSON.parse(r);}
+    if(tSnap.exists()){let p=JSON.parse(tSnap.data().data);tips={mates:[],orto:[],lectura:[],...p};}
+    else{let t=localStorage.getItem('fb_tips_v3');if(t){let p=JSON.parse(t);tips={mates:[],orto:[],lectura:[],...p};}}
+    showToast('☁️ Datos sincronizados');
+  }catch(e){
+    console.warn('Firebase load failed, using localStorage:',e);
+    try{let s=localStorage.getItem('fb_v4');if(s){let p=JSON.parse(s);state={...state,...p};if(Array.isArray(state.rewardsOwned)){let o={};state.rewardsOwned.forEach(id=>o[id]=true);state.rewardsOwned=o;}}}catch(e){}
+    try{let r=localStorage.getItem('fb_rewards_v4');if(r)rewards=JSON.parse(r);}catch(e){}
+    try{let t=localStorage.getItem('fb_tips_v3');if(t){let p=JSON.parse(t);tips={mates:[],orto:[],lectura:[],...p};}}catch(e){}
+  }
+}
+
+function showTab(tab,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+tab).classList.add('active');
+  el.classList.add('active');
+  if(tab==='rewards')renderRewards();
+}
+
+// STARS
+function addStar(){if(state.stars>=5)return;state.stars++;renderStars();showToast('⭐ ¡Estrella añadida!');save();}
+function removeStar(){if(state.stars<=0)return;state.stars--;renderStars();save();}
+function renderStars(){
+  document.getElementById('starDisplay').innerHTML=
+    Array.from({length:5},(_,i)=>`<span class="star-slot ${i<state.stars?'filled':'empty'}">⭐</span>`).join('');
+}
+
+// COINS
+function updateCoinDisplay(){
+  document.getElementById('coinCount').textContent=state.coins;
+  document.getElementById('modalCoinCount').textContent=state.coins;
+}
+function addCoins(n){state.coins=Math.max(0,state.coins+n);updateCoinDisplay();save();}
+function openCoinModal(){document.getElementById('modalCoinCount').textContent=state.coins;document.getElementById('coinInput').value='';document.getElementById('coinModal').classList.add('open');}
+function closeCoinModal(){document.getElementById('coinModal').classList.remove('open');}
+function quickCoin(n){state.coins=Math.max(0,state.coins+n);document.getElementById('modalCoinCount').textContent=state.coins;updateCoinDisplay();save();}
+function applyCoinModal(sign){
+  let v=parseInt(document.getElementById('coinInput').value)||0;
+  if(v<=0){showToast('Escribe una cantidad válida');return;}
+  state.coins=Math.max(0,state.coins+(sign*v));
+  document.getElementById('coinInput').value='';
+  updateCoinDisplay();save();
+  showToast(sign>0?'🪙 +'+v+' monedas':'🪙 −'+v+' monedas');
+}
+document.getElementById('coinModal').addEventListener('click',function(e){if(e.target===this)closeCoinModal();});
+
+// TIPS
+function toggleSubject(subj){
+  let body=document.getElementById('body-'+subj),arr=document.getElementById('arr-'+subj);
+  let open=body.classList.toggle('open');arr.textContent=open?'▲':'▼';
+}
+function addTip(subj){
+  let inp=document.getElementById('inp-'+subj),text=inp.value.trim();if(!text)return;
+  if(!tips[subj])tips[subj]=[];
+  tips[subj].push({id:Date.now(),text});inp.value='';renderTips(subj);saveTips();
+}
+function deleteTip(subj,id){tips[subj]=tips[subj].filter(t=>t.id!==id);renderTips(subj);saveTips();}
+function renderTips(subj){
+  let c=document.getElementById('tips-'+subj),arr=tips[subj]||[];
+  if(!arr.length){c.innerHTML='<div class="no-tips">Sin tips aún ✨</div>';return;}
+  c.innerHTML=arr.map(t=>`<div class="tip-item"><span>${t.text}</span><button class="tip-del" onclick="deleteTip('${subj}',${t.id})">✕</button></div>`).join('');
+}
+function renderAllTips(){SUBJECTS.forEach(s=>renderTips(s));}
+
+// TOAST / CONFETTI
+function showToast(msg){
+  let t=document.getElementById('toast');t.textContent=msg;t.style.display='block';
+  clearTimeout(t._to);t._to=setTimeout(()=>t.style.display='none',2500);
+}
+function createConfetti(){
+  for(let i=0;i<18;i++){
+    let d=document.createElement('div'),colors=['#a78bfa','#f472b6','#34d399','#fbbf24'];
+    d.style.cssText=`position:fixed;width:8px;height:8px;border-radius:2px;background:${colors[i%4]};left:${Math.random()*100}vw;top:-10px;z-index:1000;animation:fall ${1+Math.random()}s ease forwards`;
+    document.body.appendChild(d);setTimeout(()=>d.remove(),2000);
+  }
+}
+
+// TIMER
+function setMode(mode,mins,el){
+  timerMode=mode;timerTotal=mins*60;timerSeconds=timerTotal;
+  document.querySelectorAll('.tmode').forEach(b=>b.classList.remove('active'));el.classList.add('active');resetTimer();
+}
+function updateTimerDisplay(){
+  let m=Math.floor(timerSeconds/60),s=timerSeconds%60;
+  document.getElementById('timerNum').textContent=m+':'+(s<10?'0':'')+s;
+  document.getElementById('timerCircle').style.strokeDashoffset=427.3*(timerSeconds/timerTotal);
+  document.getElementById('timerLabel').textContent=timerRunning?(timerMode==='rest'?'Descansando ☕':'Modo foco activado 🔥'):'Listo para empezar';
+}
+function toggleTimer(){
+  if(timerRunning){clearInterval(timerInterval);timerRunning=false;document.getElementById('timerBtn').textContent='▶ Continuar';}
+  else{
+    timerRunning=true;document.getElementById('timerBtn').textContent='⏸ Pausar';
+    timerInterval=setInterval(()=>{
+      timerSeconds--;updateTimerDisplay();
+      if(timerSeconds<=0){
+        clearInterval(timerInterval);timerRunning=false;
+        if(timerMode!=='rest'){
+          sessionCount=Math.min(4,sessionCount+1);state.sessions++;
+          for(let i=1;i<=4;i++)document.getElementById('d'+i).classList.toggle('done',i<=sessionCount);
+          let c=timerMode==='mini'?5:timerMode==='focus'?10:20;
+          addCoins(c);showToast('🎉 ¡Sesión completada! +'+c+' 🪙');createConfetti();
+          if(sessionCount===4){sessionCount=0;showToast('🏆 ¡4 sesiones! Descansa bien 🌟');}
+        }else{showToast('☕ ¡Descanso listo! Vamos 💪');}
+        document.getElementById('timerBtn').textContent='▶ Iniciar';resetTimer();save();
+      }
+    },1000);
+  }
+}
+function resetTimer(){
+  clearInterval(timerInterval);timerRunning=false;timerSeconds=timerTotal;
+  document.getElementById('timerBtn').textContent='▶ Iniciar';updateTimerDisplay();
+}
+
+// TASKS
+function setPrio(p,el){
+  state.currentPrio=p;
+  document.querySelectorAll('.prio').forEach(b=>b.classList.remove('active'));el.classList.add('active');
+}
+function addTask(){
+  let inp=document.getElementById('taskInput'),text=inp.value.trim();if(!text)return;
+  let coinsMap={low:5,med:10,high:15};
+  state.tasks.unshift({id:Date.now(),text,prio:state.currentPrio,done:false,coins:coinsMap[state.currentPrio]});
+  inp.value='';renderTasks();save();
+}
+function toggleTask(id){
+  let t=state.tasks.find(x=>x.id===id);if(!t||t.done)return;
+  t.done=true;state.completedTasks++;addCoins(t.coins);
+  showToast('✅ ¡Completada! +'+t.coins+' 🪙');
+  if(state.completedTasks%5===0)createConfetti();
+  renderTasks();save();
+}
+function resetTask(id){let t=state.tasks.find(x=>x.id===id);if(!t)return;t.done=false;renderTasks();save();}
+function deleteTask(id){state.tasks=state.tasks.filter(x=>x.id!==id);renderTasks();save();}
+function resetAllTasks(){state.tasks.forEach(t=>t.done=false);renderTasks();save();showToast('↺ Todas las tareas reseteadas');}
+function renderTasks(){
+  let list=document.getElementById('taskList');
+  if(!state.tasks.length){list.innerHTML='<div class="empty-tasks">¡Sin tareas! Añade algo 🎯</div>';return;}
+  let pi={low:'🟢',med:'🟡',high:'🔴'};
+  list.innerHTML=state.tasks.map(t=>`
+    <div class="task-item ${t.done?'done':''}" draggable="true" data-id="${t.id}">
+      <div class="task-drag" title="Arrastrar">⠿</div>
+      <div class="task-check ${t.done?'checked':''}" onclick="toggleTask(${t.id})">${t.done?'✓':''}</div>
+      <div class="task-text">${pi[t.prio]} ${t.text}</div>
+      <div class="task-coins">+${t.coins}🪙</div>
+      ${t.done?`<button class="task-reset" onclick="resetTask(${t.id})">🔄</button>`:''}
+      <button class="task-del" onclick="deleteTask(${t.id})">✕</button>
+    </div>`).join('');
+  initDragTasks(list);
+}
+
+function initDragTasks(list){
+  let dragged=null;
+  list.querySelectorAll('.task-item').forEach(item=>{
+    item.addEventListener('dragstart',e=>{
+      dragged=item;
+      setTimeout(()=>item.classList.add('dragging'),0);
+      e.dataTransfer.effectAllowed='move';
+    });
+    item.addEventListener('dragend',()=>{
+      item.classList.remove('dragging');
+      list.querySelectorAll('.task-item').forEach(i=>i.classList.remove('drag-over'));
+      // reorder state.tasks to match DOM order
+      let newOrder=[];
+      list.querySelectorAll('.task-item').forEach(el=>{
+        let id=parseInt(el.dataset.id)||el.dataset.id;
+        let t=state.tasks.find(x=>x.id==id);
+        if(t)newOrder.push(t);
+      });
+      state.tasks=newOrder;
+      save();
+    });
+    item.addEventListener('dragover',e=>{
+      e.preventDefault();
+      if(item===dragged)return;
+      list.querySelectorAll('.task-item').forEach(i=>i.classList.remove('drag-over'));
+      item.classList.add('drag-over');
+      let rect=item.getBoundingClientRect();
+      let mid=rect.top+rect.height/2;
+      if(e.clientY<mid) list.insertBefore(dragged,item);
+      else list.insertBefore(dragged,item.nextSibling);
+    });
+    item.addEventListener('dragleave',()=>item.classList.remove('drag-over'));
+    item.addEventListener('drop',e=>{e.preventDefault();item.classList.remove('drag-over');});
+  });
+}
+
+// REWARDS
+function renderRewards(){
+  document.getElementById('rewardsGrid').innerHTML=rewards.map(r=>{
+    let owned=isOwned(r);
+    let monthCount=getMonthlyCount(r);
+    let canBuy=state.coins>=r.cost&&!owned;
+    let monthLabel='';
+    if(r.monthly){
+      monthLabel=`<div class="reward-monthly">🗓️ ${monthCount}/${r.monthly} este mes</div>`;
+    }
+    let costLabel=owned?'✅ Límite alcanzado':(r.monthly&&monthCount>0?`🪙 ${r.cost} (${monthCount}/${r.monthly})`:`🪙 ${r.cost}`);
+    return `<div class="reward-card ${owned?'unlocked':'locked'}">
+      <span class="reward-icon">${r.icon}</span>
+      <div class="reward-name">${r.name}</div>
+      ${monthLabel}
+      <div class="reward-cost">${costLabel}</div>
+      ${!owned?`<button class="unlock-btn" ${canBuy?'':'disabled'} onclick="buyReward('${r.id}',${r.cost})">Canjear</button>`:''}
+    </div>`;}).join('');
+}
+function resetRewards(){state.rewardsOwned={};renderRewards();save();showToast('↺ Premios reseteados');}
+function buyReward(id,cost){
+  let r=rewards.find(x=>x.id===id);if(!r||state.coins<cost)return;
+  state.coins-=cost;
+  if(r.monthly){
+    let cur=getMonthlyCount(r);
+    state.rewardsOwned[id]={month:curMonth(),count:cur+1};
+  }else{
+    state.rewardsOwned[id]=true;
+  }
+  updateCoinDisplay();showToast('🎁 ¡Premio canjeado!');createConfetti();renderRewards();save();
+}
+
+// REWARD EDITOR
+let reEditingId=null;
+function openRewardEditor(){
+  reEditingId=null;
+  document.getElementById('reFormTitle').textContent='➕ Añadir premio';
+  clearReForm();
+  renderRewardEditorList();
+  document.getElementById('rewardEditorModal').classList.add('open');
+}
+function closeRewardEditor(){document.getElementById('rewardEditorModal').classList.remove('open');reEditingId=null;}
+document.getElementById('rewardEditorModal').addEventListener('click',function(e){if(e.target===this)closeRewardEditor();});
+
+function renderRewardEditorList(){
+  document.getElementById('rewardEditorList').innerHTML=rewards.map(r=>`
+    <div class="re-item">
+      <div class="re-icon">${r.icon}</div>
+      <div class="re-info">
+        <div class="re-name">${r.name}</div>
+        <div class="re-meta">
+          <span>🪙 ${r.cost}</span>
+          ${r.monthly?`<span class="re-monthly-badge">${r.monthly}x mes</span>`:''}
+        </div>
+      </div>
+      <button class="re-edit-btn" onclick="editReward('${r.id}')">✏️</button>
+      <button class="re-del-btn" onclick="deleteReward('${r.id}')">🗑️</button>
+    </div>`).join('');
+}
+function clearReForm(){
+  document.getElementById('reEditId').value='';
+  document.getElementById('reIcon').value='';
+  document.getElementById('reName').value='';
+  document.getElementById('reCost').value='';
+  document.getElementById('reMonthly').value='0';
+}
+function editReward(id){
+  let r=rewards.find(x=>x.id===id);if(!r)return;
+  reEditingId=id;
+  document.getElementById('reFormTitle').textContent='✏️ Editar premio';
+  document.getElementById('reEditId').value=id;
+  document.getElementById('reIcon').value=r.icon;
+  document.getElementById('reName').value=r.name;
+  document.getElementById('reCost').value=r.cost;
+  document.getElementById('reMonthly').value=r.monthly||0;
+  document.getElementById('reForm').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function deleteReward(id){
+  rewards=rewards.filter(r=>r.id!==id);
+  delete state.rewardsOwned[id];
+  saveRewards();save();renderRewardEditorList();renderRewards();showToast('🗑️ Premio eliminado');
+}
+function saveRewardForm(){
+  let icon=document.getElementById('reIcon').value.trim()||'🎁';
+  let name=document.getElementById('reName').value.trim();
+  let cost=parseInt(document.getElementById('reCost').value)||0;
+  let monthly=parseInt(document.getElementById('reMonthly').value)||0;
+  if(!name){showToast('Escribe un nombre');return;}
+  if(cost<=0){showToast('El coste debe ser mayor que 0');return;}
+  let editId=document.getElementById('reEditId').value;
+  if(editId){
+    let idx=rewards.findIndex(r=>r.id===editId);
+    if(idx>=0)rewards[idx]={...rewards[idx],icon,name,cost,monthly};
+  }else{
+    rewards.push({id:'r_'+Date.now(),icon,name,cost,monthly});
+  }
+  saveRewards();renderRewardEditorList();renderRewards();
+  document.getElementById('reFormTitle').textContent='➕ Añadir premio';
+  clearReForm();reEditingId=null;
+  showToast(editId?'✅ Premio actualizado':'✅ Premio añadido');
+}
+
+// EXPORT / IMPORT
+function exportData(){
+  let backup={state,tips,rewards,version:2,date:new Date().toISOString()};
+  let blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  let a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='focusmauri_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();URL.revokeObjectURL(a.href);
+  showToast('⬇️ Datos exportados');
+}
+function importData(e){
+  let file=e.target.files[0];if(!file)return;
+  let reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      let backup=JSON.parse(ev.target.result);
+      if(backup.state){state={...state,...backup.state};if(Array.isArray(state.rewardsOwned)){let o={};state.rewardsOwned.forEach(id=>o[id]=true);state.rewardsOwned=o;}}
+      if(backup.tips)tips={mates:[],orto:[],lectura:[],...backup.tips};
+      if(backup.rewards)rewards=backup.rewards;
+      save();saveTips();saveRewards();
+      renderStars();updateCoinDisplay();renderTasks();renderAllTips();
+      if(document.querySelector('#sec-rewards.active'))renderRewards();
+      showToast('✅ Datos importados correctamente');
+    }catch(err){showToast('❌ Archivo no válido');}
+    e.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// BREATH
+function toggleBreath(){
+  if(breathRunning){
+    clearTimeout(breathInterval);breathRunning=false;
+    document.getElementById('breathBtn').textContent='Empezar';
+    document.getElementById('breathPhase').textContent='Respiración 4-7-8';
+    document.getElementById('breathSub').textContent='Técnica para calmar el sistema nervioso';
+    let c=document.getElementById('breathCircle');c.textContent='Listo';c.style.transform='scale(1)';c.style.background='rgba(167,139,250,.1)';
+  }else{breathRunning=true;breathStep=0;breathCount=0;document.getElementById('breathBtn').textContent='Detener';runBreath();}
+}
+function runBreath(){
+  if(!breathRunning)return;
+  if(breathCount>=4){toggleBreath();showToast('🌟 ¡4 ciclos! Mente lista.');return;}
+  let step=breathSteps[breathStep%3],c=document.getElementById('breathCircle'),sec=step.dur/1000;
+  document.getElementById('breathPhase').textContent=step.text+' ('+sec+'s)';
+  document.getElementById('breathSub').textContent=step.sub;
+  c.style.transform='scale('+step.scale+')';c.style.background=step.bg;
+  let cd=sec;c.textContent=cd;
+  let tick=setInterval(()=>{cd--;c.textContent=Math.max(0,cd);},1000);
+  breathInterval=setTimeout(()=>{clearInterval(tick);breathStep++;if(breathStep%3===0)breathCount++;if(breathRunning)runBreath();},step.dur);
+}
+
+// ── EXPONER FUNCIONES GLOBALES (necesario con type="module") ────────────────
+window.showTab=showTab;
+window.addStar=addStar;
+window.removeStar=removeStar;
+window.openCoinModal=openCoinModal;
+window.closeCoinModal=closeCoinModal;
+window.quickCoin=quickCoin;
+window.applyCoinModal=applyCoinModal;
+window.toggleSubject=toggleSubject;
+window.addTip=addTip;
+window.deleteTip=deleteTip;
+window.setMode=setMode;
+window.toggleTimer=toggleTimer;
+window.resetTimer=resetTimer;
+window.setPrio=setPrio;
+window.addTask=addTask;
+window.toggleTask=toggleTask;
+window.resetTask=resetTask;
+window.deleteTask=deleteTask;
+window.resetAllTasks=resetAllTasks;
+window.openRewardEditor=openRewardEditor;
+window.closeRewardEditor=closeRewardEditor;
+window.editReward=editReward;
+window.deleteReward=deleteReward;
+window.saveRewardForm=saveRewardForm;
+window.resetRewards=resetRewards;
+window.buyReward=buyReward;
+window.exportData=exportData;
+window.importData=importData;
+window.toggleBreath=toggleBreath;
+
+// INIT
+(async()=>{
+  await load();
+  renderStars();
+  updateCoinDisplay();
+  updateTimerDisplay();
+  renderTasks();
+  renderAllTips();
+})();
+</script>
+</body>
+</html>
